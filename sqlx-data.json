@@ -1,0 +1,129 @@
+{
+  "db": "SQLite",
+  "29e40b9b1c31b8c9c2bf1d6d2082240cfd50d50f6f7fa25bb0920488cd0a0c0c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "links",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "message",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "email",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "SELECT links, message, email FROM report"
+  },
+  "45a766ae71d65e624f61d22d35a5ea03ccb77f0d86da7dff82425ceb1ba5346b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "UPDATE paste\n                            SET\n                                expiry_views = MAX(0, expiry_views-1)\n                            WHERE id = ?"
+  },
+  "55db58b7263281374c9d19071e8e84ce85850307e4961e25e298e483f332ceaa": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "content",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "expiry_time",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "expiry_views",
+          "ordinal": 3,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT id, \n                            content, \n                            expiry_time, \n                            expiry_views \n                        FROM paste WHERE id = ?"
+  },
+  "7ae3f2db3ae8b382560202347bfdb2508a3088cb66efb6ce30eba5040ed48e16": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 3
+      }
+    },
+    "query": "INSERT INTO report ( links, message, email ) VALUES ( ?1, ?2, ?3 )"
+  },
+  "9b3ead8d4e3b644cc2f4030a2dc199d64f4d5d60075fe950fbc3e6ce7df0086d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 4
+      }
+    },
+    "query": "UPDATE paste\n            SET\n                content = ?1,\n                expiry_time = ?2,\n                expiry_views = ?3\n            WHERE id = ?4"
+  },
+  "cbb66f6a3b15657d4cb9c3c03c94d272665d0bf07f69d73418da787de9bbdf46": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "DELETE FROM report WHERE id = ?"
+  },
+  "e726102e55472fbebc5363c98f7f2c157aafbd5989b9c0b5dc6536dba7e5f7a9": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "DELETE FROM paste WHERE id = ?"
+  },
+  "f8ed9f5de5616635a5423f36c6acbf3ce6aac15756598d225b82ccebd928837f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 4
+      }
+    },
+    "query": "INSERT INTO paste ( id, content, expiry_time, expiry_views )\n            VALUES ( ?1, ?2, ?3, ?4)"
+  }
+}

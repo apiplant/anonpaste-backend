@@ -1,0 +1,6 @@
+CREATE TABLE report (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  links TEXT NOT NULL,
+  message TEXT NOT NULL,
+  email TEXT NOT NULL
+);
