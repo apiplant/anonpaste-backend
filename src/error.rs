@@ -30,7 +30,7 @@ impl Error {
 
 #[derive(Serialize)]
 pub struct ErrorMessage {
-    msg: String,
+    pub msg: String,
 }
 
 impl From<sqlx::Error> for Error {
