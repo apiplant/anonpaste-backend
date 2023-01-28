@@ -51,15 +51,6 @@ pub async fn get_app(
         email_name,
     }: &Config,
 ) -> Result<(Router<AppState>, AppState)> {
-    let governor_config = Box::new(Rc::new(
-        GovernorConfigBuilder::default()
-            .key_extractor(SmartIpKeyExtractor)
-            .per_second(4)
-            .burst_size(2)
-            .finish()
-            .unwrap(),
-    ));
-
     let options = SqliteConnectOptions::from_str(&db_url)?.create_if_missing(true);
     let pool = SqlitePool::connect_with(options).await?;
     sqlx::migrate!("./migrations").run(&pool).await?;
@@ -69,6 +60,15 @@ pub async fn get_app(
         email_name.to_string(),
     );
     let app_state = AppState { pool, mailer };
+
+    let governor_config = Box::new(Rc::new(
+        GovernorConfigBuilder::default()
+            .key_extractor(SmartIpKeyExtractor)
+            .per_second(4)
+            .burst_size(2)
+            .finish()
+            .unwrap(),
+    ));
 
     let router = Router::new()
         .merge(paste_routes(&admin_token, governor_config.clone()))
