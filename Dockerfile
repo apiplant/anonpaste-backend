@@ -19,6 +19,12 @@ RUN cargo install --path .
 # Runtime image
 FROM debian:bullseye-slim
 
+# Install certificates
+RUN apt update
+RUN apt install -y ca-certificates
+RUN update-ca-certificates
+
+
 # Run as "app" user
 RUN useradd -ms /bin/bash app
 
