@@ -81,13 +81,15 @@ impl Paste {
             })
             .await?;
 
-        let time = SystemTime::now()
+        let time: i64 = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_secs()
+            .try_into()
+            .unwrap();
 
         if let Some(expiry_time) = paste.expiry_time {
-            if expiry_time < time.try_into().unwrap() {
+            if expiry_time < time * 1000_i64 {
                 return Err(Error::NotFound);
             }
         }
