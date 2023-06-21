@@ -75,7 +75,7 @@ impl Report {
     }
 
     pub async fn delete(conn: &mut PoolConnection<Sqlite>, id: String) -> Result<(), Error> {
-        sqlx::query!("DELETE FROM paste WHERE id = ?", id)
+        sqlx::query!("DELETE FROM report WHERE id = ?", id)
             .execute(conn)
             .await?;
         Ok(())
