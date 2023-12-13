@@ -4,7 +4,7 @@ use anonpaste::{
     server::{get_app, get_test_config},
 };
 use axum::{
-    body::Body,
+    body::{to_bytes, Body},
     http::{Request, StatusCode},
 };
 use serde_json::{
@@ -17,9 +17,8 @@ use tower::ServiceExt;
 async fn fetch_reports() {
     let config = get_test_config();
     let (router, app_state) = get_app(&config).await.unwrap();
-    let mut conn = app_state.pool.acquire().await.unwrap();
     Report::create(
-        &mut conn,
+        &app_state.pool,
         &app_state.mailer,
         CreateReport {
             links: [
@@ -49,7 +48,7 @@ async fn fetch_reports() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body: Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(
         body,
@@ -61,7 +60,6 @@ async fn fetch_reports() {
 async fn create_report() {
     let config = get_test_config();
     let (router, app_state) = get_app(&config).await.unwrap();
-    let mut conn = app_state.pool.acquire().await.unwrap();
 
     let app = router.with_state(app_state.clone());
 
@@ -89,12 +87,12 @@ async fn create_report() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     println!("{:?}", body);
     let body: Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(body, json!(Null));
 
-    let reports = Report::list(&mut conn).await.unwrap();
+    let reports = Report::list(&app_state.pool).await.unwrap();
     let report = reports.first().unwrap();
 
     assert_eq!(

@@ -1,8 +1,7 @@
 use crate::error::Error;
 use crate::mailer::Mailer;
 use serde::{Deserialize, Serialize};
-use sqlx::pool::PoolConnection;
-use sqlx::Sqlite;
+use sqlx::SqlitePool;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -37,19 +36,20 @@ impl Into<Report> for ReportRow {
 }
 
 impl Report {
-    pub async fn list(conn: &mut PoolConnection<Sqlite>) -> Result<Vec<Report>, Error> {
+    pub async fn list(pool: &SqlitePool) -> Result<Vec<Report>, Error> {
         let reports = sqlx::query_as!(ReportRow, "SELECT links, message, email FROM report",)
-            .fetch_all(conn)
+            .fetch_all(pool)
             .await
             .map(|result| result.into_iter().map(|row| row.into()).collect())?;
         Ok(reports)
     }
 
     pub async fn create(
-        conn: &mut PoolConnection<Sqlite>,
+        pool: &SqlitePool,
         mailer: &Mailer,
         payload: CreateReport,
     ) -> Result<(), Error> {
+        let mut conn = pool.acquire().await?;
         let links_txt = payload.links.join("\n");
         sqlx::query!(
             "INSERT INTO report ( links, message, email ) VALUES ( ?1, ?2, ?3 )",
@@ -57,7 +57,7 @@ impl Report {
             payload.message,
             payload.email
         )
-        .execute(conn)
+        .execute(&mut *conn)
         .await?;
 
         let (_link_ids, links): (Vec<String>, Vec<String>) = payload
@@ -71,12 +71,14 @@ impl Report {
             .unzip();
 
         mailer.respond_to(&payload.email, &links).await?;
+
         Ok(())
     }
 
-    pub async fn delete(conn: &mut PoolConnection<Sqlite>, id: String) -> Result<(), Error> {
+    pub async fn delete(pool: &SqlitePool, id: String) -> Result<(), Error> {
+        let mut conn = pool.acquire().await?;
         sqlx::query!("DELETE FROM report WHERE id = ?", id)
-            .execute(conn)
+            .execute(&mut *conn)
             .await?;
         Ok(())
     }

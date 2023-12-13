@@ -1,7 +1,7 @@
 use crate::error::Error;
 use serde::{Deserialize, Serialize};
 use sqlx::pool::PoolConnection;
-use sqlx::{Connection, Sqlite};
+use sqlx::{Connection, Sqlite, SqlitePool};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Serialize, Deserialize)]
@@ -19,6 +19,7 @@ pub struct UpdatePaste {
     pub expiry_time: Option<i64>,
     pub expiry_views: Option<i64>,
 }
+
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Paste {
@@ -29,10 +30,8 @@ pub struct Paste {
 }
 
 impl Paste {
-    pub async fn create(
-        conn: &mut PoolConnection<Sqlite>,
-        payload: CreatePaste,
-    ) -> Result<(), Error> {
+    pub async fn create(pool: &SqlitePool, payload: CreatePaste) -> Result<(), Error> {
+        let mut conn = pool.acquire().await?;
         sqlx::query!(
             "INSERT INTO paste ( id, content, expiry_time, expiry_views )
                 VALUES ( ?1, ?2, ?3, ?4)",
@@ -41,14 +40,15 @@ impl Paste {
             payload.expiry_time,
             payload.expiry_views
         )
-        .execute(conn)
+        .execute(&mut *conn)
         .await?;
         Ok(())
     }
 
-    pub async fn view(conn: &mut PoolConnection<Sqlite>, id: String) -> Result<Self, Error> {
+    pub async fn view(pool: &SqlitePool, id: String) -> Result<Self, Error> {
+        let mut conn: PoolConnection<Sqlite> = pool.acquire().await?;
         let paste = conn
-            .transaction::<_, _, sqlx::error::Error>(|conn| {
+            .transaction::<_, _, sqlx::error::Error>(|trans| {
                 Box::pin(async move {
                     let paste = sqlx::query_as!(
                         Paste,
@@ -59,7 +59,7 @@ impl Paste {
                             FROM paste WHERE id = ?",
                         id,
                     )
-                    .fetch_one(&mut *conn)
+                    .fetch_one(&mut **trans)
                     .await?;
 
                     if let Some(views) = paste.expiry_views {
@@ -71,7 +71,7 @@ impl Paste {
                                 WHERE id = ?",
                                 id,
                             )
-                            .execute(conn)
+                            .execute(&mut **trans)
                             .await?;
                         }
                     }
@@ -101,11 +101,8 @@ impl Paste {
         Ok(paste)
     }
 
-    pub async fn update(
-        conn: &mut PoolConnection<Sqlite>,
-        id: String,
-        payload: UpdatePaste,
-    ) -> Result<(), Error> {
+    pub async fn update(pool: &SqlitePool, id: String, payload: UpdatePaste) -> Result<(), Error> {
+        let mut conn = pool.acquire().await?;
         sqlx::query!(
             "UPDATE paste
                 SET
@@ -118,14 +115,15 @@ impl Paste {
             payload.expiry_views,
             id,
         )
-        .execute(conn)
+        .execute(&mut *conn)
         .await?;
         Ok(())
     }
 
-    pub async fn delete(conn: &mut PoolConnection<Sqlite>, id: String) -> Result<(), Error> {
+    pub async fn delete(pool: &SqlitePool, id: String) -> Result<(), Error> {
+        let mut conn = pool.acquire().await?;
         sqlx::query!("DELETE FROM paste WHERE id = ?", id)
-            .execute(conn)
+            .execute(&mut *conn)
             .await?;
         Ok(())
     }

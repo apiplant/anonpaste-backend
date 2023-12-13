@@ -3,7 +3,7 @@ use anonpaste::{
     server::{get_app, get_test_config},
 };
 use axum::{
-    body::Body,
+    body::{to_bytes, Body},
     http::{Request, StatusCode},
 };
 use serde_json::{
@@ -15,9 +15,8 @@ use tower::ServiceExt;
 #[tokio::test]
 async fn fetch_paste() {
     let (router, app_state) = get_app(&get_test_config()).await.unwrap();
-    let mut conn = app_state.pool.acquire().await.unwrap();
     Paste::create(
-        &mut conn,
+        &app_state.pool,
         CreatePaste {
             id: "test-id".to_string(),
             content: "Hello".to_string(),
@@ -40,7 +39,7 @@ async fn fetch_paste() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body: Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(
         body,
@@ -68,9 +67,8 @@ async fn fetch_paste_not_found() {
 #[tokio::test]
 async fn fetch_paste_expiry_views() {
     let (router, app_state) = get_app(&get_test_config()).await.unwrap();
-    let mut conn = app_state.pool.acquire().await.unwrap();
     Paste::create(
-        &mut conn,
+        &app_state.pool,
         CreatePaste {
             id: "test-id".to_string(),
             content: "Hello".to_string(),
@@ -95,7 +93,7 @@ async fn fetch_paste_expiry_views() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body: Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(
         body,
@@ -119,9 +117,8 @@ async fn fetch_paste_expiry_views() {
 async fn create_paste() {
     let config = get_test_config();
     let (router, app_state) = get_app(&config).await.unwrap();
-    let mut conn = app_state.pool.acquire().await.unwrap();
 
-    let app = router.with_state(app_state);
+    let app = router.with_state(app_state.clone());
 
     let paste_payload = CreatePaste {
         id: "test-id".to_string(),
@@ -144,12 +141,14 @@ async fn create_paste() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     println!("{:?}", body);
     let body: Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(body, json!(Null));
 
-    let paste = Paste::view(&mut conn, "test-id".to_string()).await.unwrap();
+    let paste = Paste::view(&app_state.pool, "test-id".to_string())
+        .await
+        .unwrap();
 
     assert_eq!(
         paste,

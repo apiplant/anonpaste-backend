@@ -1,6 +1,6 @@
 use anonpaste::server::{get_app, get_test_config};
 use axum::{
-    body::Body,
+    body::{to_bytes, Body},
     http::{Request, StatusCode},
 };
 use tower::ServiceExt;
@@ -16,6 +16,6 @@ async fn health_check() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     assert_eq!(&body[..], b"ok");
 }

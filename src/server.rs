@@ -4,17 +4,15 @@ use axum::{
     Router,
 };
 
-use sqlx::{
-    sqlite::{SqliteConnectOptions, SqlitePool},
-    Pool, Sqlite,
-};
+use hyper::http::request::Parts;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePool};
 use std::{net::SocketAddr, rc::Rc, str::FromStr};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 use tower_governor::{governor::GovernorConfigBuilder, key_extractor::SmartIpKeyExtractor};
 use tower_http::{
     compression::CompressionLayer,
-    cors::{Any, CorsLayer},
+    cors::{AllowOrigin, Any, CorsLayer},
     trace::TraceLayer,
 };
 
@@ -24,7 +22,7 @@ use crate::{mailer::Mailer, resources::paste::paste_routes, resources::report::r
 
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: Pool<Sqlite>,
+    pub pool: SqlitePool,
     pub mailer: Mailer,
 }
 
@@ -70,6 +68,7 @@ pub async fn get_app(
             .unwrap(),
     ));
 
+    let frontend_origin = frontend_origin.clone().into_bytes();
     let router = Router::new()
         .merge(paste_routes(&admin_token, governor_config.clone()))
         .merge(report_routes(&admin_token, governor_config))
@@ -77,7 +76,11 @@ pub async fn get_app(
         .layer(TraceLayer::new_for_http())
         .layer(
             CorsLayer::new()
-                .allow_origin(frontend_origin.parse::<HeaderValue>().unwrap())
+                .allow_origin(AllowOrigin::predicate(
+                    move |origin: &HeaderValue, _request_parts: &Parts| {
+                        origin.as_bytes().ends_with(&frontend_origin)
+                    },
+                ))
                 .allow_methods(Any)
                 .allow_headers(Any),
         )
@@ -96,16 +99,13 @@ pub async fn run_server(config: Config) -> Result<()> {
 
     let (router, app_state) = get_app(&config).await?;
 
-    let addr = SocketAddr::from(([0, 0, 0, 0, 0, 0, 0, 0], 8080));
-    tracing::debug!("Starting server on  {}", addr);
-    axum::Server::bind(&addr)
-        .serve(
-            router
-                .with_state(app_state)
-                .into_make_service_with_connect_info::<SocketAddr>(),
-        )
-        .await
-        .unwrap();
+    let app = router
+        .with_state(app_state)
+        .into_make_service_with_connect_info::<SocketAddr>();
+    let addr = "0.0.0.0:8080";
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    tracing::debug!("Starting server on http://{}", addr);
+    axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }
