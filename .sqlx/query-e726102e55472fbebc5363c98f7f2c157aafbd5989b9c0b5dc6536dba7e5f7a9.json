@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM paste WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "e726102e55472fbebc5363c98f7f2c157aafbd5989b9c0b5dc6536dba7e5f7a9"
+}

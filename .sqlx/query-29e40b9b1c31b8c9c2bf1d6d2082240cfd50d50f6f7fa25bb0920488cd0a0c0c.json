@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT links, message, email FROM report",
+  "describe": {
+    "columns": [
+      {
+        "name": "links",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "message",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "email",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "29e40b9b1c31b8c9c2bf1d6d2082240cfd50d50f6f7fa25bb0920488cd0a0c0c"
+}

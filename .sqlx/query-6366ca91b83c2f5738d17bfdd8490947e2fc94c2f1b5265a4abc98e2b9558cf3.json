@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE paste\n                                SET\n                                    expiry_views = MAX(0, expiry_views-1)\n                                WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "6366ca91b83c2f5738d17bfdd8490947e2fc94c2f1b5265a4abc98e2b9558cf3"
+}

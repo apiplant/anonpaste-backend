@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, \n                                content, \n                                expiry_time, \n                                expiry_views \n                            FROM paste WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "content",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "expiry_time",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "expiry_views",
+        "ordinal": 3,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "1f0bc055eda83180b1cba59fbac161a8b8783ecb787d70a737e667b9d808b25d"
+}

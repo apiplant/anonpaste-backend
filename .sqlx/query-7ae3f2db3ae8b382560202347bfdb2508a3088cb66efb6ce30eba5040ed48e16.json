@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO report ( links, message, email ) VALUES ( ?1, ?2, ?3 )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "7ae3f2db3ae8b382560202347bfdb2508a3088cb66efb6ce30eba5040ed48e16"
+}

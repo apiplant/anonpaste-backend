@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE paste\n                SET\n                    content = ?1,\n                    expiry_time = ?2,\n                    expiry_views = ?3\n                WHERE id = ?4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "bfb1ca4f40a3ac85cbd23a251e4184dea16eb1767d24368c5df65ea3d7a1cc8b"
+}
