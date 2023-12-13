@@ -1,4 +1,4 @@
-FROM rust:latest as builder
+FROM rust:1-slim-bookworm as builder
 
 # Make a fake Rust app to keep a cached layer of compiled crates
 RUN USER=root cargo new app
@@ -17,13 +17,11 @@ COPY . .
 RUN cargo install --path .
 
 # Runtime image
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
-# Install certificates
 RUN apt update
 RUN apt install -y ca-certificates
 RUN update-ca-certificates
-
 
 # Run as "app" user
 RUN useradd -ms /bin/bash app
